@@ -24,17 +24,29 @@ export RAY_TMPDIR=/tmp/ray_$USER
 export VLLM_USE_V1=1
 
 # Transfer code from staging (Assumes you packed Verlog into Verlog.tar.gz)
-export USER=okhade
+export USER=${CHTC_USER}
 cp /staging/${USER}/Verlog.tar.gz .
 tar -xzf Verlog.tar.gz
 rm Verlog.tar.gz
 cd Verlog
+pip install -e .  # Run this inside the verl directory
+
+python3 -m venv rl_env
+
+# 2. Activate the environment (your command prompt will change to show this)
+source rl_env/bin/activate
+
+# 3. Upgrade pip to avoid installation glitches
+pip install --upgrade pip
+
+# 4. Install packaging (and any other requirements your project has)
+pip install packaging
 
 export PYTHONPATH=.:$PYTHONPATH
 
 # Ensure huggingface and wandb tokens if needed:
-# huggingface-cli login --token <your hf token>
-export WANDB_API_KEY=""
+wandb login ${WANDB_API_KEY}
+hf auth login --token ${HF_TOKEN}
 
 # Run training
 NUM_ENVS=32
