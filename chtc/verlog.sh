@@ -12,7 +12,7 @@ export HF_MODULES_CACHE=$_CONDOR_SCRATCH_DIR/modules
 export HF_METRICS_CACHE=$_CONDOR_SCRATCH_DIR/metrics
 export HF_HOME=$_CONDOR_SCRATCH_DIR/hf_home
 
-export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 # on CHTC machines, gpu names are *not* the usual 0-7 by default, so we rename them here
+export CUDA_VISIBLE_DEVICES=0 # on CHTC machines, gpu names are *not* the usual 0-7 by default, so we rename them here
 export TORCHINDUCTOR_CACHE_DIR=$_CONDOR_SCRATCH_DIR/torch_cache
 export TORCH_COMPILE_CACHE=$_CONDOR_SCRATCH_DIR/torch_compile_cache
 export XDG_CACHE_HOME=$_CONDOR_SCRATCH_DIR/xdg_cache
@@ -33,10 +33,14 @@ cp /staging/${USER}/Verlog.tar.gz .
 tar -xzf Verlog.tar.gz
 rm Verlog.tar.gz
 
+# Extract data
+tar -xzf data.tar.gz
+
 # --- Install Verlog into the container's Python ---
 cd Verlog
 pip install -e .
 pip install packaging
+pip install -U vllm
 
 export PYTHONPATH=.:$PYTHONPATH
 
@@ -46,12 +50,12 @@ wandb login ${WANDB_API_KEY}
 # hf auth login --token ${HF_TOKEN}
 
 # Run training (sized for 1 GPU with 3B model)
-NUM_ENVS=8
+NUM_ENVS=2
 BATCH_SIZE=64
 MINI_BATCH_SIZE=$((BATCH_SIZE / 2))
 MICRO_BATCH_SIZE=4
 FORWARD_BATCH_SIZE=$((4 * MICRO_BATCH_SIZE))
-OFFLOAD=true
+OFFLOAD=false
 PPO_EPOCHS=2
 
 PROJECT_DIR="$(pwd)"

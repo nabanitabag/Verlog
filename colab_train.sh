@@ -5,9 +5,8 @@ echo "============================================"
 echo "1. Installing Dependencies..."
 echo "============================================"
 pip install packaging gymnasium minigrid pandas pyarrow
-
-# verl dependencies
-pip install vllm ray
+pip install torch==2.3.0
+pip install vllm==0.5.4 ray
 
 # Install verl
 if [ ! -d "verl" ]; then
@@ -17,7 +16,6 @@ fi
 sed -i '/flash-attn/d' verl/setup.py
 sed -i '/flash-attn/d' verl/requirements.txt 2>/dev/null || true
 pip install -e verl
-
 # Install Verlog
 pip install -e .
 
@@ -31,16 +29,16 @@ echo "============================================"
 echo "3. Starting PPO Training..."
 echo "============================================"
 export CUDA_VISIBLE_DEVICES=0
-export VLLM_ATTENTION_BACKEND=FLASH_ATTN
+export VLLM_ATTENTION_BACKEND=TORCH_SDPA
 export NCCL_P2P_DISABLE=1
 
 # Sized for 1 GPU (A100 40GB or similar in Colab Pro)
-NUM_ENVS=8
+NUM_ENVS=2
 BATCH_SIZE=64
 MINI_BATCH_SIZE=$((BATCH_SIZE / 2))
 MICRO_BATCH_SIZE=4
 FORWARD_BATCH_SIZE=$((4 * MICRO_BATCH_SIZE))
-OFFLOAD=true
+OFFLOAD=false
 PPO_EPOCHS=2
 
 PROJECT_DIR="$(pwd)"

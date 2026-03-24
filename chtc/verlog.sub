@@ -12,7 +12,7 @@ output      = ../../$(log_dir)/$(Process).out
 error       = ../../$(log_dir)/$(Process).err
 
 stream_output           = true
-transfer_input_files    = .env, verlog.sh, /home/nbag/data/babyai/
+transfer_input_files    = .env, verlog.sh, /home/nbag/data.tar.gz
 should_transfer_files   = YES
 when_to_transfer_output = ON_EXIT
 
