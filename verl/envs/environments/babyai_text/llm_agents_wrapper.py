@@ -20,6 +20,7 @@ POSSIBLE_ACTIONS = [
     "dropping",
     "toggling",
     "opening",
+    "do_nothing"
 ]
 
 class BabyAILLMAgentsWrapper(gym.Wrapper):

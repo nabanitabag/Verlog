@@ -1,27 +1,31 @@
 # Verlog CHTC Submit File
+
 universe = container
 container_image = docker://verlai/verl:vllm012.latest
 
 executable  = verlog.sh
+initial_dir = $(results_dir)
+arguments   = $(Process) $(Step) $(params)
 
-log         = verlog_$(Process).log
-output      = verlog_$(Process).out
-error       = verlog_$(Process).err
+log         = ../../$(log_dir)/$(Process).log
+output      = ../../$(log_dir)/$(Process).out
+error       = ../../$(log_dir)/$(Process).err
 
 stream_output           = true
+transfer_input_files    = .env, verlog.sh, /home/nbag/data/babyai/, /home/nbag/rl_env.tar.gz
 should_transfer_files   = YES
 when_to_transfer_output = ON_EXIT
 
 # Compute resources from train.sbatch
-request_cpus            = 4
+request_cpus            = 8
 request_memory          = 200GB
 request_disk            = 200GB
 
 # Extra GPU settings
-request_gpus            = 4
-Requirements            = (Target.CUDADriverVersion >= 12.9) && (Target.HasCHTCStaging == true)
+request_gpus            = 1
+Requirements            = (Target.CUDADriverVersion >= 12.1) && (Target.HasCHTCStaging == true)
 
-+WantGPULab = true
++WantGPULab             = true
 +WantFlocking           = false
 +WantGlidein            = false
 +GPUJobLength           = "short"

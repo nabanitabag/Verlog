@@ -1,6 +1,10 @@
 #!/bin/bash
+source .env
+pid=$1  # ranges from 0 to num_commands*num_jobs-1 
+step=$2 # ranges from 0 to num_jobs-1
+#cmd=`tr '*' ' ' <<< $3` # replace * with space
+#echo $cmd
 
-# Setup Cache and Environment Variables
 export HOME=$_CONDOR_SCRATCH_DIR
 export TRANSFORMERS_CACHE=$_CONDOR_SCRATCH_DIR/models
 export HF_DATASETS_CACHE=$_CONDOR_SCRATCH_DIR/datasets
@@ -8,8 +12,7 @@ export HF_MODULES_CACHE=$_CONDOR_SCRATCH_DIR/modules
 export HF_METRICS_CACHE=$_CONDOR_SCRATCH_DIR/metrics
 export HF_HOME=$_CONDOR_SCRATCH_DIR/hf_home
 
-# We are requesting 4 GPUs. CHTC renames them.
-export CUDA_VISIBLE_DEVICES=0,1,2,3 
+export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 # on CHTC machines, gpu names are *not* the usual 0-7 by default, so we rename them here
 export TORCHINDUCTOR_CACHE_DIR=$_CONDOR_SCRATCH_DIR/torch_cache
 export TORCH_COMPILE_CACHE=$_CONDOR_SCRATCH_DIR/torch_compile_cache
 export XDG_CACHE_HOME=$_CONDOR_SCRATCH_DIR/xdg_cache
@@ -20,41 +23,40 @@ export VLLM_USAGE_DISABLE=1
 export VLLM_ATTENTION_BACKEND=FLASH_ATTN
 export NCCL_P2P_DISABLE=1
 export OUTLINES_CACHE_DIR='/tmp/.outlines'
+export USER=${CHTC_USER}
 export RAY_TMPDIR=/tmp/ray_$USER
-export VLLM_USE_V1=1
+export HYDRA_FULL_ERROR=1
 
 # Transfer code from staging (Assumes you packed Verlog into Verlog.tar.gz)
-export USER=${CHTC_USER}
 cp /staging/${USER}/Verlog.tar.gz .
 tar -xzf Verlog.tar.gz
 rm Verlog.tar.gz
+
+# --- 1. Unpack and Activate your Python 3.10 Conda Environment ---
+# (Assumes you transferred rl_env.tar.gz via your job.sub file)
+mkdir -p conda_env
+tar -xzf rl_env.tar.gz -C conda_env
+source conda_env/bin/activate
+
+# --- 2. Install Dependencies ---
 cd Verlog
-pip install -e .  # Run this inside the verl directory
-
-python3 -m venv rl_env
-
-# 2. Activate the environment (your command prompt will change to show this)
-source rl_env/bin/activate
-
-# 3. Upgrade pip to avoid installation glitches
-pip install --upgrade pip
-
-# 4. Install packaging (and any other requirements your project has)
+pip install -e .  # Now it safely installs into Python 3.10!
 pip install packaging
 
 export PYTHONPATH=.:$PYTHONPATH
 
 # Ensure huggingface and wandb tokens if needed:
+# (Make sure WANDB_API_KEY and HF_TOKEN are passed in your .sub file!)
 wandb login ${WANDB_API_KEY}
-hf auth login --token ${HF_TOKEN}
+# hf auth login --token ${HF_TOKEN}
 
-# Run training
-NUM_ENVS=32
-BATCH_SIZE=256
+# Run training (sized for 1 GPU with 3B model)
+NUM_ENVS=8
+BATCH_SIZE=64
 MINI_BATCH_SIZE=$((BATCH_SIZE / 2))
-MICRO_BATCH_SIZE=8
+MICRO_BATCH_SIZE=4
 FORWARD_BATCH_SIZE=$((4 * MICRO_BATCH_SIZE))
-OFFLOAD=false
+OFFLOAD=true
 PPO_EPOCHS=2
 
 PROJECT_DIR="$(pwd)"
@@ -62,7 +64,7 @@ CONFIG_PATH="$PROJECT_DIR/examples/sglang_multiturn/config"
 
 PYTHONUNBUFFERED=1 python3 -m verl.trainer.main_ppo \
     --config-path="$CONFIG_PATH" \
-    --config-name='gsm8k_multiturn_grpo' \
+    --config-name='babyai_ppo' \
     algorithm.adv_estimator=gae \
     data.train_batch_size=${BATCH_SIZE} \
     data.max_prompt_length=1024 \
@@ -95,11 +97,11 @@ PYTHONUNBUFFERED=1 python3 -m verl.trainer.main_ppo \
     trainer.critic_warmup=10 \
     trainer.critic_warmup_batch_repeat_times=40 \
     trainer.critic_warmup_batch_divide_ratio=4 \
-    trainer.logger='["console","wandb"]' \
+    trainer.logger=['console','wandb'] \
     trainer.wandb_keys='["wandb_api_key"]' \
-    trainer.project_name='zero' \
-    trainer.experiment_name='ppo_epoch' \
-    trainer.n_gpus_per_node=4 \
+    trainer.project_name='time_aware_balrog' \
+    trainer.experiment_name='babyai_ppo_test' \
+    trainer.n_gpus_per_node=1 \
     trainer.nnodes=1 \
     trainer.save_freq=-1 \
     trainer.test_freq=30 \
@@ -123,5 +125,5 @@ PYTHONUNBUFFERED=1 python3 -m verl.trainer.main_ppo \
     critic.ppo_max_token_len_per_gpu=8192 \
     critic.forward_max_token_len_per_gpu=8192 \
     critic.forward_micro_batch_size_per_gpu=${FORWARD_BATCH_SIZE} \
-    data.train_files=$HOME/data/gsm8k/test.parquet \
-    data.val_files=$HOME/data/gsm8k/test.parquet 2>&1 | tee verlog_run.log
+    data.train_files=babyai/train.parquet \
+    data.val_files=babyai/test.parquet 2>&1 | tee verlog_run.log

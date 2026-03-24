@@ -21,8 +21,8 @@ scp ${f}.tar.gz ${USER}@${HOSTNAME}:/staging/${USER}/
 echo "============================================"
 echo "2. Syncing chtc folder to CHTC Home directory..."
 echo "============================================"
-# This safely mirrors the folder (including .env) to your CHTC home directory
-rsync -avz ${f} ${USER}@${HOSTNAME}:~/${f}/
+# This safely mirrors the chtc folder (including .env) to your CHTC home directory
+rsync -avz ${f}/chtc ${USER}@${HOSTNAME}:~/${f}/
 
 # Clean up local tarball
 rm ${f}.tar.gz
