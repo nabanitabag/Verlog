@@ -8,12 +8,14 @@ pip install packaging gymnasium minigrid pandas pyarrow
 
 # verl dependencies
 pip install vllm ray
-pip install flash-attn --no-build-isolation
 
 # Install verl
 if [ ! -d "verl" ]; then
     git clone https://github.com/verl-project/verl.git -b v0.7.0
 fi
+# Strip flash-attn from verl's requirements so it doesn't try to build it from source
+sed -i '/flash-attn/d' verl/setup.py
+sed -i '/flash-attn/d' verl/requirements.txt 2>/dev/null || true
 pip install -e verl
 
 # Install Verlog
