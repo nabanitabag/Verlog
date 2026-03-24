@@ -22,6 +22,7 @@ export VLLM_USAGE_DISABLE=1
 
 export VLLM_ATTENTION_BACKEND=FLASH_ATTN
 export NCCL_P2P_DISABLE=1
+export TORCH_CUDA_ARCH_LIST="8.0;8.6;8.9;9.0"
 export OUTLINES_CACHE_DIR='/tmp/.outlines'
 export USER=${CHTC_USER}
 export RAY_TMPDIR=/tmp/ray_$USER
@@ -32,15 +33,9 @@ cp /staging/${USER}/Verlog.tar.gz .
 tar -xzf Verlog.tar.gz
 rm Verlog.tar.gz
 
-# --- 1. Unpack and Activate your Python 3.10 Conda Environment ---
-# (Assumes you transferred rl_env.tar.gz via your job.sub file)
-mkdir -p conda_env
-tar -xzf rl_env.tar.gz -C conda_env
-source conda_env/bin/activate
-
-# --- 2. Install Dependencies ---
+# --- Install Verlog into the container's Python ---
 cd Verlog
-pip install -e .  # Now it safely installs into Python 3.10!
+pip install -e .
 pip install packaging
 
 export PYTHONPATH=.:$PYTHONPATH
@@ -125,5 +120,5 @@ PYTHONUNBUFFERED=1 python3 -m verl.trainer.main_ppo \
     critic.ppo_max_token_len_per_gpu=8192 \
     critic.forward_max_token_len_per_gpu=8192 \
     critic.forward_micro_batch_size_per_gpu=${FORWARD_BATCH_SIZE} \
-    data.train_files=babyai/train.parquet \
-    data.val_files=babyai/test.parquet 2>&1 | tee verlog_run.log
+    data.train_files=$HOME/babyai/train.parquet \
+    data.val_files=$HOME/babyai/test.parquet 2>&1 | tee verlog_run.log

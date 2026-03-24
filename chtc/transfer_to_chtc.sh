@@ -27,4 +27,4 @@ rsync -avz ${f}/chtc ${USER}@${HOSTNAME}:~/${f}/
 # Clean up local tarball
 rm ${f}.tar.gz
 
-echo "Done! You can now run ./login_chtc.sh"
+echo "Done!"
