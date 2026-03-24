@@ -8,6 +8,7 @@ cd ../.. # cd just outside the repo
 # 1. Create the tarball
 tar --exclude='.git' \
     --exclude='.idea'  \
+    --no-xattrs \
     -czvf ${f}.tar.gz $f
 
 USER=${CHTC_USER}
