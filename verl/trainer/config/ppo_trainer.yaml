@@ -392,7 +392,7 @@ envs:
     character: "@"
     max_episode_steps: 100
     penalty_step: -0.01         
-    penalty_time: 0.0           
+    penalty_time: 0.01           
     penalty_mode: constant      
     savedir: null
     save_ttyrec_every: 0

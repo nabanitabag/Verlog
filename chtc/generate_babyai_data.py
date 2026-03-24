@@ -25,8 +25,12 @@ def generate_dataset(env_name, num_samples, output_filename):
         prompt = f"You are an agent in a grid world. Your mission is: {mission}. What is your first action?"
         
         # verl expects the data in a dictionary, usually looking for a 'prompt' key
+        # data.append({
+        #     "prompt": prompt,
+        #     "id": f"babyai_goto_{i}"
+        # })
         data.append({
-            "prompt": prompt,
+            "prompt": [{"role": "user", "content": f"You are an agent in a grid world. Your mission is: {mission}. What is your first action?"}],
             "id": f"babyai_goto_{i}"
         })
         
