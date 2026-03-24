@@ -7,7 +7,8 @@ echo "============================================"
 pip install packaging gymnasium minigrid pandas pyarrow
 
 # verl dependencies
-pip install vllm ray flash-attn
+pip install vllm ray
+pip install flash-attn --no-build-isolation
 
 # Install verl
 if [ ! -d "verl" ]; then
