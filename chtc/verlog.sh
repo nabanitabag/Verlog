@@ -119,5 +119,5 @@ PYTHONUNBUFFERED=1 python3 -m verl.trainer.main_ppo \
     critic.ppo_max_token_len_per_gpu=8192 \
     critic.forward_max_token_len_per_gpu=8192 \
     critic.forward_micro_batch_size_per_gpu=${FORWARD_BATCH_SIZE} \
-    data.train_files=$HOME/data/babyai/train.parquet \
-    data.val_files=$HOME/data/babyai/test.parquet 2>&1 | tee verlog_run.log
+    data.train_files=$HOME/babyai/train.parquet \
+    data.val_files=$HOME/babyai/test.parquet 2>&1 | tee verlog_run.log

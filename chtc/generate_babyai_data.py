@@ -41,8 +41,7 @@ def generate_dataset(env_name, num_samples, output_filename):
     print(f"Successfully saved to {save_path}\n")
 
 if __name__ == "__main__":
-    # The standard 'GoTo' local environment in BabyAI
-    ENV_ID = "BabyAI-GoToLocal-v0" 
+    ENV_ID = "BabyAI-MixedTrainLocal-v0" 
     
     # Generate 10,000 unique starting states for training
     generate_dataset(ENV_ID, 10000, "train.parquet")

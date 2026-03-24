@@ -16,13 +16,13 @@ error       = ../../$(log_dir)/verlog_$(Process).err
 stream_output           = true
 should_transfer_files   = YES
 when_to_transfer_output = ON_EXIT
-transfer_input_files    = ../../.env, ../../verlog.sh, /home/nbag/data/babyai/
+transfer_input_files    = ../../.env, ../../verlog.sh, /home/nbag/data/babyai/, /home/nbag/babyai/
 transfer_output_files   = results_$(Process).tar.gz
 
 # Compute resources
 request_cpus            = 8
-request_memory          = 200GB
-request_disk            = 200GB
+request_memory          = 100GB
+request_disk            = 100GB
 # chtc_want_el8           = true
 
 # Extra GPU settings
