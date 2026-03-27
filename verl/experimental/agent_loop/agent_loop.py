@@ -375,7 +375,11 @@ class RewardManagerWorker:
             config, tokenizer, num_examine=0, **config.reward_model.get("reward_kwargs", {})
         )
         self.rm_executor = rm_executor
-        self.loop = asyncio.get_event_loop()
+        try:
+            self.loop = asyncio.get_event_loop()
+        except RuntimeError:
+            self.loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self.loop)
 
     async def compute_score(
         self,

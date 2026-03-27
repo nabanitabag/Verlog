@@ -23,7 +23,7 @@ request_disk            = 100GB
 
 # Extra GPU settings
 request_gpus            = 1
-Requirements            = (Target.CUDADriverVersion >= 12.1) && (Target.HasCHTCStaging == true)
+Requirements            = (Target.CUDADriverVersion >= 12.1) && (Target.CUDACapability >= 8.0) && (Target.HasCHTCStaging == true)
 
 +WantGPULab             = true
 +WantFlocking           = false

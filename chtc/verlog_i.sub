@@ -27,7 +27,7 @@ request_disk            = 100GB
 
 # Extra GPU settings
 request_gpus            = $(n_gpu)
-Requirements            = (Target.CUDADriverVersion >= 12.1) && (Target.HasCHTCStaging == true)
+Requirements            = (Target.CUDADriverVersion >= 12.1) && (Target.CUDACapability >= 8.0) && (Target.HasCHTCStaging == true)
 #&& (Target.GPUs_GlobalMemoryMb > 30000)
 
 # change to true if *not* using staging for checkpoints and interested in accessing GPUs beyond CHTC

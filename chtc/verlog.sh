@@ -2,6 +2,9 @@
 source .env
 pid=$1  # ranges from 0 to num_commands*num_jobs-1 
 step=$2 # ranges from 0 to num_jobs-1
+
+# Create the output file instantly so Condor NEVER holds the job, even on a hard OOM kernel crash!
+touch results_${pid}.tar.gz
 #cmd=`tr '*' ' ' <<< $3` # replace * with space
 #echo $cmd
 
@@ -20,7 +23,7 @@ export XDG_CONFIG_HOME=$_CONDOR_SCRATCH_DIR/xdg_config
 export _USAGE_STATS_JSON_PATH=$_CONDOR_SCRATCH_DIR/vllm_usage
 export VLLM_USAGE_DISABLE=1
 
-export VLLM_ATTENTION_BACKEND=FLASH_ATTN
+
 export NCCL_P2P_DISABLE=1
 export TORCH_CUDA_ARCH_LIST="8.0;8.6;8.9;9.0"
 export OUTLINES_CACHE_DIR='/tmp/.outlines'
@@ -39,10 +42,7 @@ tar -xzf data.tar.gz
 # --- Install Verlog into the container's Python ---
 cd Verlog
 pip install -e .
-pip install packaging
-pip install -U vllm
-
-export PYTHONPATH=.:$PYTHONPATH
+pip install packaging ray
 
 # Ensure huggingface and wandb tokens if needed:
 # (Make sure WANDB_API_KEY and HF_TOKEN are passed in your .sub file!)
@@ -71,8 +71,8 @@ PYTHONUNBUFFERED=1 python3 -m verl.trainer.main_ppo \
     data.filter_overlong_prompts=True \
     data.truncation='left' \
     data.return_raw_chat=True \
-    actor_rollout_ref.rollout.mode=sync \
-    actor_rollout_ref.model.path=Qwen/Qwen2.5-3B-Instruct \
+    actor_rollout_ref.rollout.mode=async \
+    actor_rollout_ref.model.path=Qwen/Qwen2.5-0.5B-Instruct \
     actor_rollout_ref.actor.optim.lr=1e-6 \
     actor_rollout_ref.model.use_remove_padding=True \
     actor_rollout_ref.actor.ppo_mini_batch_size=${MINI_BATCH_SIZE} \
@@ -86,7 +86,7 @@ PYTHONUNBUFFERED=1 python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=${FORWARD_BATCH_SIZE} \
     actor_rollout_ref.rollout.tensor_model_parallel_size=1 \
     actor_rollout_ref.rollout.name=vllm \
-    actor_rollout_ref.rollout.gpu_memory_utilization=0.65 \
+    actor_rollout_ref.rollout.gpu_memory_utilization=0.45 \
     actor_rollout_ref.rollout.agent.num_workers=${NUM_ENVS} \
     actor_rollout_ref.rollout.n=1 \
     actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=${FORWARD_BATCH_SIZE} \
@@ -125,3 +125,8 @@ PYTHONUNBUFFERED=1 python3 -m verl.trainer.main_ppo \
     critic.forward_micro_batch_size_per_gpu=${FORWARD_BATCH_SIZE} \
     data.train_files=$HOME/babyai/train.parquet \
     data.val_files=$HOME/babyai/test.parquet 2>&1 | tee verlog_run.log
+
+# Package the results so HTCondor doesn't throw a missing file Hold error
+tar -czvf ../results_${pid}.tar.gz verlog_run.log
+# Ensure it exists even if tar somehow fails
+touch ../results_${pid}.tar.gz

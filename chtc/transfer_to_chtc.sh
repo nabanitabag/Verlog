@@ -2,8 +2,14 @@
 source .env
 
 f=Verlog
+USER=${CHTC_USER}
+HOSTNAME="ap2001.chtc.wisc.edu"
 
 cd ../.. # cd just outside the repo
+
+# Establish persistent SSH connection (ask password once)
+echo "Establishing SSH connection..."
+ssh -o ControlMaster=auto -o ControlPath=~/.ssh/control-%r@%h:%p -o ControlPersist=10m -fN ${USER}@${HOSTNAME}
 
 # 1. Create the tarball
 tar --exclude='.git' \
@@ -11,21 +17,20 @@ tar --exclude='.git' \
     --no-xattrs \
     -czvf ${f}.tar.gz $f
 
-USER=${CHTC_USER}
-HOSTNAME="ap2001.chtc.wisc.edu"
-
 echo "============================================"
 echo "1. Transferring tarball to CHTC Staging..."
 echo "============================================"
-scp ${f}.tar.gz ${USER}@${HOSTNAME}:/staging/${USER}/
+scp -o ControlPath=~/.ssh/control-%r@%h:%p ${f}.tar.gz ${USER}@${HOSTNAME}:/staging/${USER}/
 
 echo "============================================"
 echo "2. Syncing chtc folder to CHTC Home directory..."
 echo "============================================"
-# This safely mirrors the chtc folder (including .env) to your CHTC home directory
-rsync -avz ${f}/chtc ${USER}@${HOSTNAME}:~/${f}/
+rsync -avz -e "ssh -o ControlPath=~/.ssh/control-%r@%h:%p" ${f}/chtc ${USER}@${HOSTNAME}:~/${f}/
 
-# Clean up local tarball
+# Clean up
 rm ${f}.tar.gz
 
-echo "Done!"
+# Close SSH connection
+ssh -O exit -o ControlPath=~/.ssh/control-%r@%h:%p ${USER}@${HOSTNAME} 2>/dev/null
+
+echo "Transferred at $(date '+%Y-%m-%d %H:%M:%S'). Done!"
